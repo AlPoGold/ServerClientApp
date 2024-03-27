@@ -10,16 +10,28 @@ public class Server {
     private ServerHandler serverHandler;
     private ServerWindow serverWindow;
 
-
+    public static void main(String[] args) {
+        new Server();
+    }
     public Server() {
-        serverHandler = new ServerHandler();
-        serverWindow = new ServerWindow(serverHandler);
+        serverWindow = new ServerWindow(this);
+        serverHandler = new ServerHandler(this);
 
     }
+    
+    
 
-    public void start(){
-        serverHandler.start(PORT);
+    public ServerHandler getServerHandler() {
+        return serverHandler;
     }
 
+    public void startListening() {
+        serverHandler.setStatus(true);
 
+        
+    }
+
+    public void stopListening() {
+        serverHandler.setStatus(false);
+    }
 }

@@ -28,7 +28,14 @@ public class ClientWindow extends JFrame {
     private String nameClient;
     private boolean isCreateLogin = false;
 
-
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new ClientWindow();
+            }
+        });
+    }
     public JTextArea getTextArea() {
         return textArea;
     }
@@ -65,12 +72,11 @@ public class ClientWindow extends JFrame {
         setSize(WIDTH, HEIGHT);
         setTitle(TITLE);
         setResizable(false);
-//        setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         add(createMainPanel());
 
-        setVisible(false);
+        setVisible(true);
     }
 
     private JPanel createMainPanel() {
@@ -191,5 +197,11 @@ public class ClientWindow extends JFrame {
 
         return jpanel;
 
+    }
+
+    public void sendMessage(String value) {
+        String text = textField.getText();
+        String message = String.format("%s %s: %s\n", LocalTime.now().format(formatTime), nameClient, value);
+        textField.setText("");
     }
 }

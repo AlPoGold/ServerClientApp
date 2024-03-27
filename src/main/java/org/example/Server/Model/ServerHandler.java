@@ -1,6 +1,8 @@
 package org.example.Server.Model;
 
 import org.example.Client.Model.Client;
+import org.example.NET.Connection;
+import org.example.NET.ConnectionObserver;
 import org.example.NET.Logger;
 
 import java.io.*;
@@ -10,17 +12,53 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ServerHandler implements Logger {
+public class ServerHandler implements Logger, ConnectionObserver {
+    public static final int PORT = 8181;
+    public static final String ipAdress = "localhost";
     public static DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
     public static DateTimeFormatter formatTime = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     private HashMap<UUID, Client> clients;
+    private List<Connection> connections;
+    private boolean isServerUp = false;
 
 
 
-    public ServerHandler() {
+    public ServerHandler(Server server) {
         clients = new HashMap<>();
+        connections = new ArrayList<>();
 
+    }
+
+    public void setStatus(boolean workingServer){
+        isServerUp = workingServer;
+        updateServer();
+    }
+
+    private void updateServer() {
+        if(isServerUp){
+            try(ServerSocket serverSocket = new ServerSocket(PORT)){
+                System.out.println("Server is UP!");
+                while(isServerUp){
+                    try{
+                        new Connection(serverSocket.accept(), this );
+                        writeLog("Server is working");
+                        System.out.println("Server is running");
+
+                    }catch (IOException e){
+                        writeLog(e.getMessage());
+                    }
+
+
+                }
+
+            }catch(IOException e){
+                System.out.println("Can't connect to server");
+                writeLog("Can't connect to server");
+            }
+        }else{
+            System.out.println("Server stopped");
+        }
     }
 
     public List<String> getListClients() {
@@ -66,41 +104,35 @@ public class ServerHandler implements Logger {
 
     }
 
-    public void start(int PORT) {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Сервер запущен на порту " + PORT);
-            writeLog("Сервер запущен на порту " + PORT);
-            while (true) {
-                try {
-                    Socket clientSocket = serverSocket.accept();
-                    System.out.println("Подключился новый клиент: " + clientSocket);
+    @Override
+    public synchronized void onConnectionReady(Connection connection) {
+        connections.add(connection);
 
-                    PrintWriter clientOut = new PrintWriter(clientSocket.getOutputStream(), true);
-                    clientOut.println("Подключение успешно. Пришлите свой идентификатор");
-
-                    Scanner clientIn = new Scanner(clientSocket.getInputStream());
-                    String clientId = clientIn.nextLine();
-                    System.out.println("Идентификатор клиента " + clientSocket + ": " + clientId);
-
-                    String allClients = clients.entrySet().stream()
-                            .map(it -> "id = " + it.getKey() + ", client = " + it.getValue().getClientSocket())
-                            .collect(Collectors.joining("\n"));
-                    clientOut.println("Список доступных клиентов: \n" + allClients);
-
-                    ClientHandler clientHandler = new ClientHandler(clientSocket, clients);
-                    new Thread(clientHandler).start();
-
-                    for (ClientHandler client : clients.values()) {
-                        client.send("Подключился новый клиент: " + clientSocket + ", id = " + clientId);
-                    }
-                    clients.put(clientId, clientHandler);
-                } catch (IOException e) {
-                    System.err.println("Произошла ошибка при взаимодействии с клиентом: " + e.getMessage());
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Не удалось начать прослушивать порт " + PORT, e);
-        }
     }
+
+    @Override
+    public synchronized void onReceiveString(Connection connection, String value) {
+
+    }
+
+    @Override
+    public synchronized void onDisconnect(Connection connection) {
+
+        connections.remove(connection);
+        sendAllConnections(connection + "is connected");
+
+    }
+
+    @Override
+    public synchronized void onException(Connection connection, Exception e) {
+        writeLog(connection + ": exception" + e.getMessage());
+    }
+
+
+    private void sendAllConnections(String message){
+        connections.stream().forEach(it -> it.sendMessage(message));
     }
 }
+
+
+

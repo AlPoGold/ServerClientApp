@@ -1,15 +1,18 @@
 package org.example.Server.GUI;
 
+import org.example.Server.Model.Server;
 import org.example.Server.Model.ServerHandler;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-public class ServerWindow extends JFrame {
+public class ServerWindow extends JFrame implements ActionListener {
     public static final int HEIGHT = 500;
     public static final int WIDTH = 500;
     private final String TITLE = "Chat Server";
@@ -19,23 +22,28 @@ public class ServerWindow extends JFrame {
     }
 
     private boolean isServerUp;
+    private Server server;
 
     //widgets
     private JTextArea txtField;
     private JButton btnStart;
     private JButton btnStop;
 
-    //services
-    private ServerHandler serverHandler;
 
+    public ServerWindow(Server server) {
+        this.server = server;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                initWindow();
 
-    public ServerWindow(ServerHandler serverHandler) {
-        initWindow();
-        this.serverHandler = serverHandler;
+            }
+        });
+
 
     }
 
-    private void initWindow(){
+    private void initWindow() {
         setSize(WIDTH, HEIGHT);
         setTitle(TITLE);
         setResizable(false);
@@ -63,21 +71,28 @@ public class ServerWindow extends JFrame {
         btnStart = new JButton("START SESSION");
         btnStop = new JButton("STOP SESSION");
 
-        btnStart.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                updateStatus("Server was started ", true);
-                appendText(serverHandler.readLog());
-            }
-        });
+//        btnStart.addMouseListener(new MouseAdapter() {
+//            @Override
+//            public void mouseReleased(MouseEvent e) {
+//                SwingUtilities.invokeLater(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        server.getServerHandler().setStatus(true);
+//                    }
+//                });
+//
+//            }
+//        });
+//
+//        btnStop.addMouseListener(new MouseAdapter() {
+//            @Override
+//            public void mouseReleased(MouseEvent e) {
+//                server.getServerHandler().setStatus(false);
+//
+//            }
+//        });
 
-        btnStop.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                updateStatus("Server was stopped ", false);
 
-            }
-        });
 
         jPanelBtn.add(btnStart);
         jPanelBtn.add(btnStop);
@@ -88,12 +103,13 @@ public class ServerWindow extends JFrame {
         return jPanel;
     }
 
-    private void updateStatus(String text, boolean isServer){
+    private void updateStatus(String text, boolean isServer) {
 
         String message = String.format(text + LocalDateTime.now().format(ServerHandler.formatDateTime) + "!\n");
         appendText(message);
-        serverHandler.writeLog(message);
+        server.getServerHandler().writeLog(message);
         isServerUp = isServer;
+        server.getServerHandler().setStatus(false);
 
     }
 
@@ -101,7 +117,19 @@ public class ServerWindow extends JFrame {
         try {
             txtField.append(text);
         } catch (RuntimeException e) {
-            e.printStackTrace();
+            server.getServerHandler().writeLog("Can't add message");
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object source = e.getSource();
+        if(source == btnStart){
+            server.startListening();
+        }else if(source == btnStop){
+            server.stopListening();
+        }else{
+            throw new RuntimeException("Unknown source =" + source);
         }
     }
 }
