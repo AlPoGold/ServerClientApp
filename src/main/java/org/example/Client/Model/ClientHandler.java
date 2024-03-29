@@ -12,7 +12,7 @@ public class ClientHandler implements Logger {
     @Override
     public void writeLog(String message) {
         try(FileWriter fileWriter = new FileWriter(".\\src\\main\\java\\org\\example\\NET\\logging.txt", true)){
-            fileWriter.write(message);
+            fileWriter.write(message+"\n");
 
         }catch (IOException e){
             System.out.println(e.getMessage());

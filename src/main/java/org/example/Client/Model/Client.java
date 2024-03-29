@@ -3,18 +3,13 @@ package org.example.Client.Model;
 import org.example.Client.GUI.ClientWindow;
 import org.example.NET.Connection;
 import org.example.NET.ConnectionObserver;
-import org.example.Server.Model.Server;
 
-import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.Scanner;
 import java.util.UUID;
 
-public class Client implements ConnectionObserver, ActionListener {
+public class Client implements ConnectionObserver {
 
     private final String IP_ADDRESS = "localhost";
     private final int PORT = 8181;
@@ -30,30 +25,39 @@ public class Client implements ConnectionObserver, ActionListener {
     }
 
     public Client() {
-        clientWindow = new ClientWindow();
+        clientWindow = new ClientWindow(this);
         clientHandler = new ClientHandler();
         try{
-            this.connection = new Connection(this, IP_ADDRESS, PORT);
+            name = clientWindow.getNameClient();
+            this.connection = new Connection(this, IP_ADDRESS, PORT, name);
+
+            connection.sendMessage(name + "was registered");
         }catch(IOException e){
             System.out.println("No connection" + e.getMessage());
         }
+
+
 
     }
 
 
     public String getName() {
-
+        name = clientWindow.getNameClient();
         return name;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
+    public void setName(String name) {
+        this.name = name;
+    }
 
+    public void sendMessage(String message) {
+        connection.sendMessage(message);
     }
 
     @Override
     public void onConnectionReady(Connection connection) {
         System.out.println("Connection ready");
+
     }
 
     @Override
@@ -64,20 +68,18 @@ public class Client implements ConnectionObserver, ActionListener {
 
     @Override
     public void onDisconnect(Connection connection) {
+        connection.disconnect();
         System.out.println("Connection close");
     }
 
     @Override
     public void onException(Connection connection, Exception e) {
-        System.out.println("Exception");
+        System.out.println("Exception:" + e.getMessage());
     }
 
-    private synchronized void printMessage(String msg){
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                clientHandler.writeLog(msg + "\n");
-            }
-        });
+
+    public void getMessage(String message) {
+        connection.sendMessage(message);
+        clientHandler.writeLog(message);
     }
 }

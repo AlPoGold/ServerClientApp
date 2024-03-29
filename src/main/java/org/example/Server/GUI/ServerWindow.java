@@ -9,19 +9,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.LocalDate;
 
-public class ServerWindow extends JFrame implements ActionListener {
+public class ServerWindow extends JFrame{
     public static final int HEIGHT = 500;
     public static final int WIDTH = 500;
     private final String TITLE = "Chat Server";
 
-    public boolean isServerUp() {
-        return isServerUp;
-    }
-
-    private boolean isServerUp;
     private Server server;
 
     //widgets
@@ -32,15 +26,7 @@ public class ServerWindow extends JFrame implements ActionListener {
 
     public ServerWindow(Server server) {
         this.server = server;
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                initWindow();
-
-            }
-        });
-
-
+        initWindow();
     }
 
     private void initWindow() {
@@ -49,10 +35,8 @@ public class ServerWindow extends JFrame implements ActionListener {
         setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         JPanel jPanel = createMainPanel();
         add(jPanel);
-
         setVisible(true);
     }
 
@@ -63,73 +47,40 @@ public class ServerWindow extends JFrame implements ActionListener {
         jPanel.add(txtField, BorderLayout.CENTER);
         JScrollPane scrollPane = new JScrollPane(txtField);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
         jPanel.add(scrollPane, BorderLayout.CENTER);
-
-
         JPanel jPanelBtn = new JPanel(new GridLayout(1, 2));
         btnStart = new JButton("START SESSION");
         btnStop = new JButton("STOP SESSION");
 
-//        btnStart.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mouseReleased(MouseEvent e) {
-//                SwingUtilities.invokeLater(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        server.getServerHandler().setStatus(true);
-//                    }
-//                });
-//
-//            }
-//        });
-//
-//        btnStop.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mouseReleased(MouseEvent e) {
-//                server.getServerHandler().setStatus(false);
-//
-//            }
-//        });
+        btnStart.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                server.startListening();
 
+            }
+        });
 
+        btnStop.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                server.stopListening();
+
+            }
+        });
 
         jPanelBtn.add(btnStart);
         jPanelBtn.add(btnStop);
         jPanelBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         jPanel.add(jPanelBtn, BorderLayout.SOUTH);
-
-
         return jPanel;
-    }
-
-    private void updateStatus(String text, boolean isServer) {
-
-        String message = String.format(text + LocalDateTime.now().format(ServerHandler.formatDateTime) + "!\n");
-        appendText(message);
-        server.getServerHandler().writeLog(message);
-        isServerUp = isServer;
-        server.getServerHandler().setStatus(false);
-
     }
 
     public void appendText(String text) {
         try {
-            txtField.append(text);
+            txtField.append(LocalDate.now() + " " + text + "\n");
         } catch (RuntimeException e) {
-            server.getServerHandler().writeLog("Can't add message");
+            System.out.println("can't append text");
         }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object source = e.getSource();
-        if(source == btnStart){
-            server.startListening();
-        }else if(source == btnStop){
-            server.stopListening();
-        }else{
-            throw new RuntimeException("Unknown source =" + source);
-        }
-    }
 }

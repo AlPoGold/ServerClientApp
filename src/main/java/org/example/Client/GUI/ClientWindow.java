@@ -1,5 +1,7 @@
 package org.example.Client.GUI;
 
+import org.example.Client.Model.Client;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,6 +18,8 @@ public class ClientWindow extends JFrame {
     private final int WIDTH = 400;
     private final int HEIGHT = 400;
 
+    private Client client;
+
 
     JPanel mainPanel;
 
@@ -26,16 +30,9 @@ public class ClientWindow extends JFrame {
 
 
     private String nameClient;
+    private String message;
     private boolean isCreateLogin = false;
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new ClientWindow();
-            }
-        });
-    }
     public JTextArea getTextArea() {
         return textArea;
     }
@@ -48,25 +45,11 @@ public class ClientWindow extends JFrame {
         return isCreateLogin;
     }
 
-    public ClientWindow() {
+    public ClientWindow(Client client) {
+        this.client = client;
         initWindow();
 
     }
-//    public void updateSession(){
-//        if(serverWindow.isServerUp()){
-//            setVisible(true);
-//            if(isCreateLogin){
-//                textArea.append(serverService.readLogging());
-//                textField.setEditable(true);
-//            }
-//
-//
-//        }else{
-//            textField.setEditable(false);
-//
-//        }
-//
-//    }
     private void initWindow() {
 
         setSize(WIDTH, HEIGHT);
@@ -126,7 +109,8 @@ public class ClientWindow extends JFrame {
         textField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //TODO send message
+                message = textField.getText();
+                sendMessage(message);
             }
 
         });
@@ -134,7 +118,8 @@ public class ClientWindow extends JFrame {
         sendBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                //TODO send message
+                message = textField.getText();
+                sendMessage(message);
 
             }
         });
@@ -144,33 +129,22 @@ public class ClientWindow extends JFrame {
         return jpanel;
     }
 
-//    private void handleMessage() {
-//        String text = textField.getText();
-//        String message = String.format("%s %s: %s\n", LocalTime.now().format(), nameClient, text);
-//        serverWindow.appendText(message);
-//        serverService.loggingChat(message);
-//        serverService.addNewMessage(message);
-//        textField.setText("");
-//    }
 
-    public void addServerMessage(String text){
-        textArea.append(text+"\n");
-    }
 
     private JPanel createLogPanel() {
 
         JPanel jpanel = new JPanel(new GridLayout(2, 3));
 
         JTextField ipField = new JTextField();
-        ipField.setText("127.0.1.1");
+        ipField.setText("localhost");
         JTextField portField = new JTextField();
-        portField.setText("8189");
+        portField.setText("8181");
 
         JPasswordField passwordField = new JPasswordField("password");
         passwordField.setEchoChar('\u2022');
 
         JTextField loginField = new JTextField();
-        loginField.setText("ivan_igorevich");
+        loginField.setText("polina");
 
         JButton btnSend = new JButton("LOGIN");
         btnSend.addMouseListener(new MouseAdapter() {
@@ -178,11 +152,11 @@ public class ClientWindow extends JFrame {
             public void mouseReleased(MouseEvent e) {
                 isCreateLogin = true;
                 nameClient = loginField.getText();
+                client.setName(nameClient);
                 logPanel.setVisible(false);
                 String message = String.format("%s %s: You have been registered!\n", LocalTime.now().format(formatTime), nameClient);
 
                 textArea.append(message);
-//                textArea.append(serverService.readLogging());
                 textField.setEditable(true);
             }
         });
@@ -200,8 +174,13 @@ public class ClientWindow extends JFrame {
     }
 
     public void sendMessage(String value) {
-        String text = textField.getText();
         String message = String.format("%s %s: %s\n", LocalTime.now().format(formatTime), nameClient, value);
+        textArea.append(message+"\r");
         textField.setText("");
+        client.sendMessage(message);
+    }
+
+    public String getMessage() {
+        return textField.getText();
     }
 }

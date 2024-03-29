@@ -1,0 +1,13 @@
+add new client
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionCannot invoke "java.util.List.add(Object)" because "this.messages" is null
+Connection: /127.0.0.1 : 56453: exceptionConnection reset
