@@ -3,6 +3,7 @@ import org.example.NET.Connection;
 import org.example.Server.GUI.ServerWindow;
 
 import java.util.List;
+import java.util.Timer;
 import java.util.stream.Collectors;
 
 public class Server {
@@ -43,9 +44,17 @@ public class Server {
     }
 
     public void showAllMessages(List<Connection> connections) {
+
         for (Connection conn: connections
              ) {
-            serverWindow.appendText(conn.getMessages().stream().collect(Collectors.joining()));
+//            String history = "";
+            System.out.println(conn.getMsg());
+//            System.out.println(String.join("\n", conn.getMessages()));
+//            serverWindow.appendText(conn.getMessages().stream().collect(Collectors.joining()));
         }
+    }
+
+    public void sendMessage(String message) {
+        serverWindow.appendText(message);
     }
 }

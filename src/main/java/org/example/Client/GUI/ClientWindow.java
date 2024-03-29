@@ -153,6 +153,7 @@ public class ClientWindow extends JFrame {
                 isCreateLogin = true;
                 nameClient = loginField.getText();
                 client.setName(nameClient);
+                client.getConnection().setNameClient(nameClient);
                 logPanel.setVisible(false);
                 String message = String.format("%s %s: You have been registered!\n", LocalTime.now().format(formatTime), nameClient);
 

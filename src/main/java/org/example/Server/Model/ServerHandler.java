@@ -5,6 +5,10 @@ import org.example.NET.Connection;
 import org.example.NET.ConnectionObserver;
 import org.example.NET.Logger;
 
+import javax.swing.*;
+import javax.swing.Timer;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,6 +23,8 @@ public class ServerHandler implements Logger, ConnectionObserver {
     public static DateTimeFormatter formatTime = DateTimeFormatter.ofPattern("HH:mm:ss");
     private Thread serverThread;
     private Server server;
+    protected static List<Connection> handlers = Collections.synchronizedList(new ArrayList<Connection>());
+
 
     private HashMap<UUID, Connection> clients;
     private Connection clientConnection;
@@ -56,17 +62,31 @@ public class ServerHandler implements Logger, ConnectionObserver {
         if (isServerUp) {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("Server is UP!");
+//                int delay = 1000;
+//                ActionListener listener = new AbstractAction() {
+//                    @Override
+//                    public void actionPerformed(ActionEvent e) {
+////                        System.out.println("task : " + new Date());
+//                        if(connections.size()!=0){
+//                            server.showAllMessages(connections);
+//                        }
+//
+//                    }
+//                };
+//                Timer timer = new Timer(delay, listener);
+//                timer.start();
+//                timer.setRepeats(true);
                 while (true) {
                     try {
                         clientConnection = new Connection(serverSocket.accept(), this);
+                        handlers.add(clientConnection);
                         connections.add(clientConnection);
-                        writeLog("add new client");
+                        broadcast(clientConnection + " was added!");
 
                     } catch (IOException e) {
                         writeLog(e.getMessage());
                     }
 
-                    server.showAllMessages(connections);
                 }
 
             } catch (IOException e) {
@@ -85,6 +105,25 @@ public class ServerHandler implements Logger, ConnectionObserver {
             nameClients.add(conn.getClientName());
         }
         return nameClients;
+    }
+
+    protected static void broadcast(String message) {
+        synchronized (handlers) {
+            Iterator<Connection> it = handlers.iterator();
+            while (it.hasNext()) {
+                Connection c = it.next();
+                try {
+                    synchronized (c.getOutStream()) {
+                        c.sendMessage(message);
+                        c.getOutStream().writeUTF(message);
+                    }
+                    c.getOutStream().flush();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+
+                }
+            }
+        }
     }
 
     public void addClient(Connection connection) {
@@ -162,6 +201,18 @@ public class ServerHandler implements Logger, ConnectionObserver {
             client.sendMessage(value);
         }
     }
+
+//    private void updateMessagesArea() {
+//        while (!messageBuffer.isEmpty()) {
+//            String message = messageBuffer.poll();
+//            server.sendMessage(message);
+//        }
+//    }
+
+
+
+
+
 }
 
 

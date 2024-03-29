@@ -9,7 +9,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.UUID;
 
-public class Client implements ConnectionObserver {
+public class Client implements ConnectionObserver, ActionListener {
 
     private final String IP_ADDRESS = "localhost";
     private final int PORT = 8181;
@@ -20,21 +20,27 @@ public class Client implements ConnectionObserver {
     ClientWindow clientWindow;
     Connection connection;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         new Client();
+
     }
 
-    public Client() {
+
+
+    public Client() throws InterruptedException {
         clientWindow = new ClientWindow(this);
         clientHandler = new ClientHandler();
-        try{
-            name = clientWindow.getNameClient();
-            this.connection = new Connection(this, IP_ADDRESS, PORT, name);
 
-            connection.sendMessage(name + "was registered");
+        try{
+
+            this.connection = new Connection(this, IP_ADDRESS, PORT, name="default");
+
         }catch(IOException e){
             System.out.println("No connection" + e.getMessage());
         }
+
+
+
 
 
 
@@ -50,6 +56,10 @@ public class Client implements ConnectionObserver {
         this.name = name;
     }
 
+    public Connection getConnection() {
+        return connection;
+    }
+
     public void sendMessage(String message) {
         connection.sendMessage(message);
     }
@@ -62,7 +72,7 @@ public class Client implements ConnectionObserver {
 
     @Override
     public void onReceiveString(Connection connection, String value) {
-        clientWindow.sendMessage(value);
+        //TODO send message
 
     }
 
@@ -78,8 +88,12 @@ public class Client implements ConnectionObserver {
     }
 
 
-    public void getMessage(String message) {
-        connection.sendMessage(message);
-        clientHandler.writeLog(message);
+    public String getMessage() {
+            return clientWindow.getMessage();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        connection.sendMessage(getMessage());
     }
 }
