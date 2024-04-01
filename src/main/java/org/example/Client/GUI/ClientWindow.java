@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
@@ -31,7 +32,6 @@ public class ClientWindow extends JFrame {
 
     private String nameClient;
     private String message;
-    private boolean isCreateLogin = false;
 
     public JTextArea getTextArea() {
         return textArea;
@@ -39,10 +39,6 @@ public class ClientWindow extends JFrame {
 
     public String getNameClient() {
         return nameClient;
-    }
-
-    public boolean isCreateLogin() {
-        return isCreateLogin;
     }
 
     public ClientWindow(Client client) {
@@ -110,7 +106,12 @@ public class ClientWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 message = textField.getText();
-                sendMessage(message);
+                textField.setText("");
+                try {
+                    client.sendMessage(message);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
 
         });
@@ -119,7 +120,12 @@ public class ClientWindow extends JFrame {
             @Override
             public void mouseReleased(MouseEvent e) {
                 message = textField.getText();
-                sendMessage(message);
+                textField.setText("");
+                try {
+                    client.sendMessage(message);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
 
             }
         });
@@ -146,18 +152,23 @@ public class ClientWindow extends JFrame {
         JTextField loginField = new JTextField();
         loginField.setText("polina");
 
-        JButton btnSend = new JButton("LOGIN");
-        btnSend.addMouseListener(new MouseAdapter() {
+        JButton btnLogin = new JButton("LOGIN");
+        btnLogin.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                isCreateLogin = true;
+                client.setRegistered(true);
                 nameClient = loginField.getText();
                 client.setName(nameClient);
                 client.getConnection().setNameClient(nameClient);
                 logPanel.setVisible(false);
-                String message = String.format("%s %s: You have been registered!\n", LocalTime.now().format(formatTime), nameClient);
+                String message = String.format("%s: %s have been registered!\n", LocalTime.now().format(formatTime), nameClient);
 
-                textArea.append(message);
+
+                try {
+                    client.sendMessage(message);
+                } catch (IOException ex) {
+                    System.out.println("Something has gone wrong with login");
+                }
                 textField.setEditable(true);
             }
         });
@@ -166,19 +177,18 @@ public class ClientWindow extends JFrame {
         jpanel.add(portField);
         jpanel.add(loginField);
         jpanel.add(passwordField);
-
-        jpanel.add(btnSend);
+        jpanel.add(btnLogin);
 
 
         return jpanel;
 
     }
 
-    public void sendMessage(String value) {
-        String message = String.format("%s %s: %s\n", LocalTime.now().format(formatTime), nameClient, value);
-        textArea.append(message+"\r");
-        textField.setText("");
-        client.sendMessage(message);
+    public void sendMessage(String value) throws IOException {
+        String message = String.format("%s: %s", LocalTime.now().format(formatTime), value);
+        textArea.append(message+"\n");
+
+
     }
 
     public String getMessage() {

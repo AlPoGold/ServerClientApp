@@ -1,6 +1,5 @@
 package org.example.Server.Model;
 
-import org.example.Client.Model.Client;
 import org.example.NET.Connection;
 import org.example.NET.ConnectionObserver;
 import org.example.NET.Logger;
@@ -11,10 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ServerHandler implements Logger, ConnectionObserver {
     public static final int PORT = 8181;
@@ -26,14 +23,19 @@ public class ServerHandler implements Logger, ConnectionObserver {
     protected static List<Connection> handlers = Collections.synchronizedList(new ArrayList<Connection>());
 
 
-    private HashMap<UUID, Connection> clients;
+    private HashMap<String, Connection> clients;
     private Connection clientConnection;
     private List<Connection> connections;
     private boolean isServerUp = false;
 
 
+    protected DataInputStream inStream;
+    protected DataOutputStream outStream;
+
+
+
     public ServerHandler(Server server) {
-        clients = new HashMap<>();
+        clients = new HashMap<String, Connection>();
         connections = new ArrayList<>();
         this.server = server;
     }
@@ -62,29 +64,16 @@ public class ServerHandler implements Logger, ConnectionObserver {
         if (isServerUp) {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("Server is UP!");
-//                int delay = 1000;
-//                ActionListener listener = new AbstractAction() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent e) {
-////                        System.out.println("task : " + new Date());
-//                        if(connections.size()!=0){
-//                            server.showAllMessages(connections);
-//                        }
-//
-//                    }
-//                };
-//                Timer timer = new Timer(delay, listener);
-//                timer.start();
-//                timer.setRepeats(true);
                 while (true) {
                     try {
                         clientConnection = new Connection(serverSocket.accept(), this);
                         handlers.add(clientConnection);
                         connections.add(clientConnection);
-                        broadcast(clientConnection + " was added!");
+                        server.sendServiceMessage("SERVER: " + clientConnection + " was added!");
 
                     } catch (IOException e) {
                         writeLog(e.getMessage());
+                        break;
                     }
 
                 }
@@ -94,7 +83,7 @@ public class ServerHandler implements Logger, ConnectionObserver {
                 writeLog("Can't connect to server");
             }
         } else {
-            System.out.println("else-block");
+            serverThread.interrupt();
         }
     }
 
@@ -108,26 +97,19 @@ public class ServerHandler implements Logger, ConnectionObserver {
     }
 
     protected static void broadcast(String message) {
-        synchronized (handlers) {
-            Iterator<Connection> it = handlers.iterator();
-            while (it.hasNext()) {
-                Connection c = it.next();
-                try {
-                    synchronized (c.getOutStream()) {
-                        c.sendMessage(message);
-                        c.getOutStream().writeUTF(message);
-                    }
-                    c.getOutStream().flush();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-
-                }
+        for (Connection conn: handlers
+             ) {
+            try {
+                conn.getOutStream().writeUTF(message);
+                conn.getOutStream().flush();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
     public void addClient(Connection connection) {
-        clients.put(UUID.randomUUID(), connection);
+        clients.put(connection.getClientName(), connection);
         writeLog("new client" + connection.getClientName() + "was added!\n");
     }
 
@@ -161,23 +143,20 @@ public class ServerHandler implements Logger, ConnectionObserver {
     }
 
     @Override
-    public synchronized void onConnectionReady(Connection connection) {
-        connections.forEach(System.out::println);
+    public void onConnectionReady(Connection connection) {
+        broadcast("Connection is up for " + connection.getClientName());
 
     }
-
-//    @Override
-//    public synchronized void onReceiveString(Connection connection, String value) {
-//
-//    }
+    @Override
+    public void onReceiveString(Connection connection, String value) {
+       server.sendServiceMessage(value);
+       broadcast(value);
+    }
 
     @Override
-    public synchronized void onDisconnect(Connection connection) {
-
+    public void onDisconnect(Connection connection) {
+        broadcast(connection +  "is disconnected");
         connections.remove(connection);
-        sendAllConnections(connection + "is disconnected");
-        stopServer();
-
     }
 
     @Override
@@ -186,28 +165,6 @@ public class ServerHandler implements Logger, ConnectionObserver {
     }
 
 
-    private void sendAllConnections(String message) {
-        connections.stream().forEach(it -> it.sendMessage(message));
-    }
-
-    public Connection getClientConnection() {
-        return clientConnection;
-    }
-
-    @Override
-    public synchronized void onReceiveString(Connection connection, String value) {
-        // Broadcast the received message to all clients
-        for (Connection client : connections) {
-            client.sendMessage(value);
-        }
-    }
-
-//    private void updateMessagesArea() {
-//        while (!messageBuffer.isEmpty()) {
-//            String message = messageBuffer.poll();
-//            server.sendMessage(message);
-//        }
-//    }
 
 
 

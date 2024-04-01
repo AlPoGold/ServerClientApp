@@ -77,7 +77,7 @@ public class ServerWindow extends JFrame{
 
     public void appendText(String text) {
         try {
-            txtField.append(LocalDate.now() + " " + text + "\n");
+            txtField.append(text+"\n");
         } catch (RuntimeException e) {
             System.out.println("can't append text");
         }

@@ -29,32 +29,21 @@ public class Server {
     public void startListening() {
         serverHandler.setStatus(true);
         serverHandler.startServer();
-        serverWindow.appendText("Server is started!");
+       sendServiceMessage("Server is started!");
 
     }
 
     public void stopListening() {
-        serverHandler.stopServer();
         serverHandler.setStatus(false);
-        serverWindow.appendText("Server is stopped!");
+        sendServiceMessage("Server is stopped!");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             serverHandler.stopServer();
         }));
+        serverHandler.stopServer();
     }
 
-    public void showAllMessages(List<Connection> connections) {
-
-        for (Connection conn: connections
-             ) {
-//            String history = "";
-            System.out.println(conn.getMsg());
-//            System.out.println(String.join("\n", conn.getMessages()));
-//            serverWindow.appendText(conn.getMessages().stream().collect(Collectors.joining()));
-        }
-    }
-
-    public void sendMessage(String message) {
-        serverWindow.appendText(message);
+    public void sendServiceMessage(String str) {
+        serverWindow.appendText(str);
     }
 }

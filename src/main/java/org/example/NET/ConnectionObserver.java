@@ -1,5 +1,7 @@
 package org.example.NET;
 
+import java.io.IOException;
+
 public interface ConnectionObserver {
 
     //Возможные события в соединении

@@ -9,12 +9,12 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.UUID;
 
-public class Client implements ConnectionObserver, ActionListener {
+public class Client implements ConnectionObserver{
 
     private final String IP_ADDRESS = "localhost";
     private final int PORT = 8181;
     String name;
-    UUID uuid;
+    boolean isRegistered = false;
 
     ClientHandler clientHandler;
     ClientWindow clientWindow;
@@ -39,17 +39,20 @@ public class Client implements ConnectionObserver, ActionListener {
             System.out.println("No connection" + e.getMessage());
         }
 
-
-
-
-
-
     }
 
 
     public String getName() {
         name = clientWindow.getNameClient();
         return name;
+    }
+
+    public boolean isRegistered() {
+        return isRegistered;
+    }
+
+    public void setRegistered(boolean registered) {
+        isRegistered = registered;
     }
 
     public void setName(String name) {
@@ -60,26 +63,41 @@ public class Client implements ConnectionObserver, ActionListener {
         return connection;
     }
 
-    public void sendMessage(String message) {
-        connection.sendMessage(message);
+    public void sendMessage(String message) throws IOException {
+        connection.getOutStream().writeUTF(getName() + " : " + message);
+        connection.getOutStream().flush();
+
+
     }
 
     @Override
     public void onConnectionReady(Connection connection) {
-        System.out.println("Connection ready");
+        try {
+            clientWindow.sendMessage("Connection ready");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
     @Override
     public void onReceiveString(Connection connection, String value) {
-        //TODO send message
+        try{
+            clientWindow.sendMessage(value);
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+        }
 
     }
 
     @Override
-    public void onDisconnect(Connection connection) {
+    public void onDisconnect(Connection connection){
+        try {
+            clientWindow.sendMessage("Connection close");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         connection.disconnect();
-        System.out.println("Connection close");
     }
 
     @Override
@@ -88,12 +106,4 @@ public class Client implements ConnectionObserver, ActionListener {
     }
 
 
-    public String getMessage() {
-            return clientWindow.getMessage();
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        connection.sendMessage(getMessage());
-    }
 }

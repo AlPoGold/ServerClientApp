@@ -50,20 +50,17 @@ public class Connection {
                         //Передали экземпляр обрамляющего класса
                         eventListener.onConnectionReady(Connection.this);
                         while (!rxThread.isInterrupted()) {
-                            newMsg =inStream.readUTF();
-                            System.out.println("in thread");
-                            System.out.println(newMsg);
+                            newMsg = inStream.readUTF();
                             eventListener.onReceiveString(Connection.this, newMsg);
+                            newMsg="";
                         }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+
+                    }catch (IOException e){
+                        System.out.println(e.getMessage());
+                        eventListener.onException(Connection.this, e);
+                    }finally{
+                        eventListener.onDisconnect(Connection.this);
                     }
-//                    }catch (IOException e){
-//                        System.out.println(e.getMessage());
-//                        eventListener.onException(Connection.this, e);
-//                    }finally{
-//                        eventListener.onDisconnect(Connection.this);
-//                    }
                 }
             });
             rxThread.start();
@@ -71,23 +68,6 @@ public class Connection {
             System.out.println("No connection: "+ e.getMessage());
         }
     }
-
-
-//    public synchronized void sendMessage(String newMessage){
-//        try{
-//            //перевод каретки в начало и новая строка
-//            messages.add(newMessage);
-//            out.write(newMessage + "\r\n");
-//            msg = newMessage;
-//            out.flush();
-//        }catch (Exception e){
-//            eventListener.onException(Connection.this, e);
-//        }
-//
-//    }
-
-
-
 
     public synchronized void disconnect(){
         rxThread.interrupt();
@@ -112,19 +92,6 @@ public class Connection {
         this.nameClient = nameClient;
     }
 
-    public List<String> getMessages() {
-        return messages;
-    }
-
-    public synchronized String receiveMessage() throws IOException {
-        return in.readLine();
-    }
-
-    public synchronized void sendNewMessage(String message) throws IOException {
-        out.write(message + "\r\n");
-        out.flush();
-    }
-
     public Thread getRxThread() {
         return rxThread;
     }
@@ -141,7 +108,8 @@ public class Connection {
         return outStream;
     }
 
-    public void sendMessage(String message) {
-        newMsg = message;
+
+    public ConnectionObserver getEventListener() {
+        return eventListener;
     }
 }
