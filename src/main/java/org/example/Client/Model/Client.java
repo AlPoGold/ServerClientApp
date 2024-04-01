@@ -94,16 +94,30 @@ public class Client implements ConnectionObserver{
     public void onDisconnect(Connection connection){
         try {
             clientWindow.sendMessage("Connection close");
+            clientWindow.getTextArea().setEditable(false);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            clientHandler.writeLog(e.getMessage());
         }
         connection.disconnect();
     }
 
     @Override
     public void onException(Connection connection, Exception e) {
-        System.out.println("Exception:" + e.getMessage());
+        clientHandler.writeLog("Exception:" + e.getMessage());
     }
 
+    @Override
+    public void registeredClient(Connection connection, String name){
+        connection.registeredClient();
+        connection.setNameClient(name);
+        try {
+            sendMessage(name + " has been registered!");
+        } catch (IOException e) {
+            System.out.println("Problems with registration");
+        }
+    }
 
+    public void registered(String name) {
+        registeredClient(connection, name);
+    }
 }

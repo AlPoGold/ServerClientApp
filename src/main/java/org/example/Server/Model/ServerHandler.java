@@ -3,11 +3,6 @@ package org.example.Server.Model;
 import org.example.NET.Connection;
 import org.example.NET.ConnectionObserver;
 import org.example.NET.Logger;
-
-import javax.swing.*;
-import javax.swing.Timer;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.ServerSocket;
 import java.time.format.DateTimeFormatter;
@@ -29,9 +24,6 @@ public class ServerHandler implements Logger, ConnectionObserver {
     private boolean isServerUp = false;
 
 
-    protected DataInputStream inStream;
-    protected DataOutputStream outStream;
-
 
 
     public ServerHandler(Server server) {
@@ -52,7 +44,7 @@ public class ServerHandler implements Logger, ConnectionObserver {
 
     public void stopServer() {
         if (serverThread != null) {
-            serverThread.interrupt();
+            updateServer();
         }
     }
 
@@ -83,6 +75,10 @@ public class ServerHandler implements Logger, ConnectionObserver {
                 writeLog("Can't connect to server");
             }
         } else {
+            for (Connection conn: handlers
+                 ) {
+                conn.disconnect();
+            }
             serverThread.interrupt();
         }
     }
@@ -110,7 +106,7 @@ public class ServerHandler implements Logger, ConnectionObserver {
 
     public void addClient(Connection connection) {
         clients.put(connection.getClientName(), connection);
-        writeLog("new client" + connection.getClientName() + "was added!\n");
+        writeLog("new client:" + connection.getClientName() + " was added!\n");
     }
 
     public void writeLog(String message) {
@@ -144,32 +140,53 @@ public class ServerHandler implements Logger, ConnectionObserver {
 
     @Override
     public void onConnectionReady(Connection connection) {
-        broadcast("Connection is up for " + connection.getClientName());
+        broadcast("Connection is up for " + connection);
 
     }
     @Override
     public void onReceiveString(Connection connection, String value) {
+
+        // TODO : WHY IS IT NOT WORKING??
        server.sendServiceMessage(value);
-       broadcast(value);
+       if(value.contains("have been registered")){
+           registeredClient(connection, connection.getClientName());
+       }else if(Objects.equals(value, "/exit")){
+            onDisconnect(connection);
+        }else if(Objects.equals(value, "/all")){
+            broadcast(allMembers());
+        }else{
+           broadcast(value);
+           System.out.println(allMembers());
+       }
+
+    }
+
+    private String allMembers() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Connection> entry: clients.entrySet()
+             ) {
+            sb.append(entry.getKey()).append(" : ").append(entry.getValue()).append("\n");
+        }
+        return sb.toString();
     }
 
     @Override
     public void onDisconnect(Connection connection) {
-        broadcast(connection +  "is disconnected");
+        server.sendServiceMessage(connection +  " is disconnected");
+        broadcast(connection +  " is disconnected");
         connections.remove(connection);
+        connection.disconnect();
     }
 
     @Override
-    public synchronized void onException(Connection connection, Exception e) {
+    public void onException(Connection connection, Exception e) {
         writeLog(connection + ": exception" + e.getMessage());
     }
 
-
-
-
-
-
-
+    @Override
+    public void registeredClient(Connection connection, String name) {
+        addClient(connection);
+    }
 }
 
 

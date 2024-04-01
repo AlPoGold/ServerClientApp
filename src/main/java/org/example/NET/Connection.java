@@ -1,16 +1,10 @@
 package org.example.NET;
 
-
-
-
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 //Инкапсулируем класс с сетью (1 соединение клиент---сервер)
 public class Connection {
@@ -21,6 +15,7 @@ public class Connection {
     String nameClient;
     List<String> messages;
     String newMsg;
+    boolean isRegister = false;
 
     // Потоки ввода-вывода
     private  BufferedReader in;
@@ -39,8 +34,6 @@ public class Connection {
         this.socket = socket;
         this.eventListener = connectionObserver;
         try{
-//            in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-//            out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
             inStream = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             outStream = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             rxThread = new Thread(new Runnable() {
@@ -82,6 +75,10 @@ public class Connection {
     @Override
     public String toString() {
         return "Connection: " + socket.getInetAddress() + " : " + socket.getPort();
+    }
+
+    public void registeredClient(){
+        isRegister = true;
     }
 
     public String getClientName() {

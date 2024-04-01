@@ -5,16 +5,15 @@ import org.example.Server.Model.ServerHandler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ServerWindow extends JFrame{
     public static final int HEIGHT = 500;
     public static final int WIDTH = 500;
-    private final String TITLE = "Chat Server";
+    private final String TITLE = "Server";
 
     private Server server;
 
@@ -77,7 +76,7 @@ public class ServerWindow extends JFrame{
 
     public void appendText(String text) {
         try {
-            txtField.append(text+"\n");
+            txtField.append(LocalDate.now()+" " + text+"\n");
         } catch (RuntimeException e) {
             System.out.println("can't append text");
         }

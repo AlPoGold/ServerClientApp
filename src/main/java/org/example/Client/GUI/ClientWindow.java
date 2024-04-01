@@ -156,16 +156,15 @@ public class ClientWindow extends JFrame {
         btnLogin.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                client.setRegistered(true);
                 nameClient = loginField.getText();
-                client.setName(nameClient);
-                client.getConnection().setNameClient(nameClient);
                 logPanel.setVisible(false);
-                String message = String.format("%s: %s have been registered!\n", LocalTime.now().format(formatTime), nameClient);
+                String message = String.format("%s: %s have been registered!", LocalTime.now().format(formatTime), nameClient);
+                client.registered(nameClient);
 
 
                 try {
                     client.sendMessage(message);
+                    client.setRegistered(true);
                 } catch (IOException ex) {
                     System.out.println("Something has gone wrong with login");
                 }
